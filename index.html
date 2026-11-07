@@ -3,59 +3,116 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MobileLab 카운터</title>
-  <style>
-    body {
-      display: grid;
-      place-items: center;
-      min-height: 100dvh;
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      color: #17253d;
-      background: #f0f4fa;
-    }
-
-    main {
-      padding: 1.5rem;
-      text-align: center;
-    }
-
-    output {
-      display: block;
-      margin: 0.5rem 0 1rem;
-      font-size: 4rem;
-      font-variant-numeric: tabular-nums;
-    }
-
-    button {
-      min-width: 9rem;
-      min-height: 3rem;
-      padding: 0.5rem 1rem;
-      border: 0;
-      border-radius: 0.5rem;
-      background: #2451b7;
-      color: #fff;
-      font: inherit;
-      cursor: pointer;
-    }
-  </style>
+  <meta name="theme-color" content="#121719">
+  <title>괴수 해체업자</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="data.js"></script>
+  <script defer src="game.js"></script>
+  <script defer src="effects.js"></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
-  <main>
-    <h1>카운터</h1>
-    <output id="count" aria-label="현재 숫자">0</output>
-    <button id="increment" type="button">숫자 올리기 +1</button>
+  <header class="masthead">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">◆</div>
+      <div><p class="eyebrow">SALVAGE YARD</p><h1>괴수 해체업자</h1></div>
+    </div>
+    <div class="header-tools">
+      <div class="wallet"><span>보유 골드</span><strong><b aria-hidden="true">◈</b> <output id="gold">0</output></strong></div>
+      <div class="wallet permit"><span>해체 표식</span><strong><b aria-hidden="true">✦</b> <output id="seals">0</output></strong></div>
+      <button type="button" id="settings-button" class="icon-button" aria-label="설정" title="설정">⚙</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <div class="floor">
+      <section class="panel operation" aria-labelledby="salvage-heading">
+        <div class="panel-heading">
+          <div><p class="eyebrow">01 / DISMANTLING</p><h2 id="salvage-heading">해체장</h2></div>
+          <button id="registry-button" type="button" class="secondary"><span aria-hidden="true">▤</span> 입고 목록</button>
+        </div>
+        <div id="scene" class="scene">
+          <div class="scene-grid" aria-hidden="true"></div>
+          <div class="scene-heading"><p id="specimen" class="eyebrow"></p><h3 id="beast-name"></h3><span id="beast-zone"></span></div>
+          <div id="sprite-frame" class="sprite-frame"></div>
+          <div id="done-overlay" class="done-overlay" hidden>
+            <strong>해체 완료</strong>
+            <button type="button" class="primary" id="intake-button">같은 사체 입고</button>
+          </div>
+        </div>
+        <div class="operation-controls">
+          <div class="progress-label"><span>해체 진행률</span><strong id="salvage-percent">0%</strong></div>
+          <progress id="salvage-progress" max="100" value="0" aria-label="해체 진행률"></progress>
+          <div id="parts-bar" class="parts-bar" aria-label="해체 부위"></div>
+          <div class="auto-bar">
+            <label><input type="checkbox" id="auto-cut" checked> 자동 해체 <span id="auto-details"></span></label>
+            <span id="hit-power"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel sorting" aria-labelledby="sorting-heading">
+        <div class="panel-heading">
+          <div><p class="eyebrow">02 / SORTING LINE</p><h2 id="sorting-heading">자동 머지 작업장</h2></div>
+          <button type="button" class="secondary" id="rules-button" title="계열별 자동 머지 설정">머지 설정</button>
+        </div>
+        <div class="conveyor">
+          <div class="conveyor-readout">
+            <span><i class="lamp" aria-hidden="true"></i> 수거 라인</span>
+            <span id="floor-count">바닥 0</span>
+          </div>
+          <canvas id="workshop" width="720" height="160" aria-hidden="true"></canvas>
+          <div id="merge-message" class="merge-message" aria-hidden="true"></div>
+        </div>
+        <div class="sorting-status">
+          <span>동일 재료 <strong>3개 → 1개</strong></span>
+          <span id="collect-rate">수거 약 6개/초</span>
+          <button type="button" id="sort-button" class="secondary" hidden>일괄 수거</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel desk" aria-labelledby="desk-heading">
+      <div class="panel-heading">
+        <div><p class="eyebrow">03 / OPERATIONS DESK</p><h2 id="desk-heading">작업 관리</h2></div>
+        <div class="bin-indicator"><span>보관함</span><strong id="stock-space">0 / 140</strong></div>
+      </div>
+      <progress id="stock-progress" max="140" value="0" aria-label="보관함 용량"></progress>
+      <nav class="tabs" id="tabs" aria-label="작업 관리 메뉴">
+        <button type="button" data-tab="inventory" aria-current="true">보관함</button>
+        <button type="button" data-tab="process">가공</button>
+        <button type="button" data-tab="craft">제작</button>
+        <button type="button" data-tab="sell">판매</button>
+        <button type="button" data-tab="quests">납품 <span id="quest-badge" hidden></span></button>
+        <button type="button" data-tab="upgrades">강화</button>
+      </nav>
+      <div class="desk-content" id="desk-content"></div>
+    </section>
   </main>
 
-  <script>
-    const countDisplay = document.getElementById('count');
-    const incrementButton = document.getElementById('increment');
-    let count = 0;
+  <footer class="site-footer"><span id="save-status" role="status">자동 저장 준비</span><span>MobileLab · 해체 기록부</span></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-    incrementButton.addEventListener('click', () => {
-      count += 1;
-      countDisplay.value = String(count);
-    });
-  </script>
+  <dialog id="registry-dialog">
+    <div class="dialog-header"><div><p class="eyebrow">SPECIMEN REGISTRY</p><h2>괴수 입고 목록</h2></div><button type="button" class="icon-button" data-close aria-label="닫기">×</button></div>
+    <div class="dialog-body" id="registry-list"></div>
+  </dialog>
+  <dialog id="rules-dialog">
+    <div class="dialog-header"><div><p class="eyebrow">SORTING PROTOCOL</p><h2>자동 머지 설정</h2></div><button type="button" class="icon-button" data-close aria-label="닫기">×</button></div>
+    <div class="dialog-body">
+      <p class="muted">보존 수량은 각 계열의 1등급 재료에 적용됩니다. 상한 등급에서 머지가 멈춥니다.</p>
+      <div id="rule-list"></div>
+    </div>
+  </dialog>
+  <dialog id="settings-dialog">
+    <div class="dialog-header"><div><p class="eyebrow">WORKSHOP SETTINGS</p><h2>설정</h2></div><button type="button" class="icon-button" data-close aria-label="닫기">×</button></div>
+    <div class="dialog-body settings">
+      <label><input id="sound-toggle" type="checkbox"> 효과음</label>
+      <label><input id="motion-toggle" type="checkbox"> 애니메이션 줄이기</label>
+      <label><input id="protect-toggle" type="checkbox"> 의뢰용 재료를 판매와 머지에서 보호</label>
+      <button type="button" class="danger" id="reset-button">새 게임 시작</button>
+    </div>
+  </dialog>
+  <noscript>괴수 해체업자를 플레이하려면 브라우저에서 JavaScript를 켜 주세요.</noscript>
 </body>
 </html>
