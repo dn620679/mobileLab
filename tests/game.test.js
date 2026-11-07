@@ -243,7 +243,7 @@ test('invalid saves are sanitized, and all referenced offline entry resources ex
   assert.equal(invalid.state.jobs.length, 0);
   assert.equal(invalid.state.quests.length, 3);
   const root = path.resolve(__dirname, '..');
-  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const html = fs.readFileSync(path.join(root, 'index.template.html'), 'utf8');
   assert.doesNotMatch(html, /(?:src|href)="(?:https?:)?\/\//);
   for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) assert.ok(fs.existsSync(path.join(root, match[1])));
   for (const beast of beasts) assert.ok(fs.existsSync(path.join(root, 'assets', beast.id + '.webp')));

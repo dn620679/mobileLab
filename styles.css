@@ -74,7 +74,7 @@ small, .muted { color: var(--muted); }
 .scene {
   position: relative; overflow: hidden; isolation: isolate; min-height: 250px; aspect-ratio: 2.11;
   border-block: 1px solid #3b4542;
-  background: linear-gradient(90deg, #101719e8, #121c2070 40%, #10191c25), url("assets/hangar.jpg") center 60% / cover, #202c30;
+  background: linear-gradient(90deg, #101719e8, #121c2070 40%, #10191c25), var(--hangar-art, none) center 60% / cover, #202c30;
   image-rendering: pixelated;
 }
 .scene-grid {
@@ -270,5 +270,5 @@ body.reduce-motion *, body.reduce-motion *::after { animation-duration: .01ms !i
   .desk-content { padding-inline: 7px; }
 }
 
-.item-icon { background: url("assets/icons.png") 0 0 / 1000% var(--atlas-height, 1200%) no-repeat; }
-.station-sprite { background: url("assets/stations.png") 0 0 / 200% 200% no-repeat; }
+.item-icon { background: var(--item-art, none) 0 0 / 1000% var(--atlas-height, 1200%) no-repeat; }
+.station-sprite { background: var(--station-art, none) 0 0 / 200% 200% no-repeat; }

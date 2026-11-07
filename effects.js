@@ -1,7 +1,7 @@
 'use strict';
 
 const SALVAGE_EFFECTS = (() => {
-  const { items } = SALVAGE_DATA;
+  const { items, assetUrl } = SALVAGE_DATA;
   const spritePositions = Object.fromEntries(Object.keys(items).map((id, index) => [id, [index % 10, Math.floor(index / 10)]]));
   const rows = Math.ceil(Object.keys(items).length / 10);
   const random = (min, max) => min + Math.random() * (max - min);
@@ -17,7 +17,7 @@ const SALVAGE_EFFECTS = (() => {
   function create(canvas, reduced) {
     const ctx = canvas.getContext('2d');
     const art = new Image();
-    art.src = 'assets/icons.png';
+    art.src = assetUrl('icons.png');
     let pieces = [];
     let sparks = [];
     let frame = 0;

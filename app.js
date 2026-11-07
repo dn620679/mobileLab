@@ -1,14 +1,14 @@
 'use strict';
 
 (() => {
-  const { beasts, items, families, recipes, stations, upgrades, itemId } = SALVAGE_DATA;
+  const { beasts, items, families, recipes, stations, upgrades, itemId, assetUrl } = SALVAGE_DATA;
   const game = SALVAGE_GAME;
   const byId = id => document.getElementById(id);
   const disabled = blocked => blocked ? ' disabled' : '';
   const fmt = value => value.toLocaleString('ko-KR');
   const qty = id => game.count(state.stock, id);
   const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const artPath = id => 'assets/' + id + '.webp';
+  const artPath = id => assetUrl(id + '.webp');
   const lastMarkup = new WeakMap();
   const descriptions = {
     inventory: '보관함', process: '재료 가공', craft: '완제품 제작',
@@ -36,6 +36,10 @@
   const model = game.create({ raw: readSave(), emit: onEvent, changed: onChange });
   const state = model.state;
   const isReduced = () => state.settings.reduced || motionPreference.matches;
+  const surfaceArt = { '--hangar-art': 'hangar.jpg', '--item-art': 'icons.png', '--station-art': 'stations.png' };
+  for (const [property, image] of Object.entries(surfaceArt)) {
+    document.documentElement.style.setProperty(property, 'url("' + assetUrl(image) + '")');
+  }
   const effects = SALVAGE_EFFECTS.create(byId('workshop'), isReduced);
   const { icon } = SALVAGE_EFFECTS;
 

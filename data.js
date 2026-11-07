@@ -175,7 +175,14 @@ const SALVAGE_DATA = (() => {
     id, client, name, needs, bonus, seals: 1, points: index % 3 === 2 ? 1 : 0,
   }));
 
-  return { families, items, recipes, beasts, stations, upgrades, quests, itemId };
+  function assetUrl(name) {
+    if (typeof SALVAGE_EMBEDDED_ART !== 'undefined' && Object.hasOwn(SALVAGE_EMBEDDED_ART, name)) {
+      return SALVAGE_EMBEDDED_ART[name];
+    }
+    return 'assets/' + name;
+  }
+
+  return { families, items, recipes, beasts, stations, upgrades, quests, itemId, assetUrl };
 })();
 
 if (typeof module === 'object' && module.exports) module.exports = SALVAGE_DATA;
