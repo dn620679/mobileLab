@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MobileLab 카운터</title>
+  <style>
+    body {
+      display: grid;
+      place-items: center;
+      min-height: 100dvh;
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      color: #17253d;
+      background: #f0f4fa;
+    }
+
+    main {
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    output {
+      display: block;
+      margin: 0.5rem 0 1rem;
+      font-size: 4rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    button {
+      min-width: 9rem;
+      min-height: 3rem;
+      padding: 0.5rem 1rem;
+      border: 0;
+      border-radius: 0.5rem;
+      background: #2451b7;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>카운터</h1>
+    <output id="count" aria-label="현재 숫자">0</output>
+    <button id="increment" type="button">숫자 올리기 +1</button>
+  </main>
+
+  <script>
+    const countDisplay = document.getElementById('count');
+    const incrementButton = document.getElementById('increment');
+    let count = 0;
+
+    incrementButton.addEventListener('click', () => {
+      count += 1;
+      countDisplay.value = String(count);
+    });
+  </script>
+</body>
+</html>
