@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101924">
+<title>전선 돌파 | BREAKLINE</title>
+<style>
+:root{color-scheme:dark;--ink:#ecf6ff;--muted:#abc2d3;--line:#63809166;--aqua:#64f6db;--paper:#101b27;font-family:system-ui,"Malgun Gothic",sans-serif;background:#101924;color:var(--ink)}
+*{box-sizing:border-box}body{margin:0;overflow:hidden;overscroll-behavior:none}button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:2px solid white;outline-offset:4px}button:disabled{opacity:.4;cursor:default}[hidden]{display:none!important}
+.shell{position:relative;display:grid;place-items:center;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#334656,#101924 66%)}.backmark{position:absolute;left:max(4vw,22px);bottom:8vh;font:900 clamp(40px,8vw,140px)/.72 system-ui;letter-spacing:-.105em;color:#ffffff08;pointer-events:none;user-select:none}
+.arena{width:min(100vw,64dvh);height:100%;position:relative;overflow:hidden;background:#263b54;box-shadow:0 0 80px #020912b0;isolation:isolate;touch-action:none;user-select:none}
+canvas{display:block;position:absolute;inset:0;width:100%;height:100%}#labels{pointer-events:none}.hud{position:absolute;z-index:2;top:0;inset-inline:0;padding:max(13px,env(safe-area-inset-top)) max(13px,env(safe-area-inset-right)) 14px max(13px,env(safe-area-inset-left));background:linear-gradient(#111b2be8,#111b2b60 82%,transparent);pointer-events:none}.hud-top{display:flex;align-items:center;gap:8px}.hud-top button{pointer-events:auto}.stage{flex:1;min-width:0}.stage span,.count span,.micro{font:800 10px/1.15 ui-monospace,monospace;letter-spacing:.13em;color:var(--aqua)}.stage strong{display:block;margin-top:3px;font-size:clamp(15px,4vw,20px);line-height:1.2;white-space:nowrap}.count{display:flex;gap:4px;align-items:center;border-left:1px solid var(--line);padding-left:8px}.count strong{font:900 25px/1 ui-monospace,monospace}.tool{width:39px;height:39px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:#142536df;font-size:15px}.track{margin-top:10px;height:4px;background:#83aeb63c;border-radius:3px;overflow:hidden}.track i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:var(--aqua)}.boss{margin-top:10px;text-align:center}.boss span{font:900 11px/1 ui-monospace,monospace;letter-spacing:.14em;color:#ffd0bd}.boss .track{margin-top:5px;height:6px}.boss i{background:#ff765d}
+.wave{position:absolute;z-index:2;top:21%;width:100%;text-align:center;color:white;font-size:clamp(15px,4vw,24px);font-weight:900;letter-spacing:.04em;text-shadow:0 2px 8px #071220;pointer-events:none}.wave span{display:inline-block;padding:5px 12px;border-block:1px solid #82aab68c;background:#142336b0}.bottom-hint{position:absolute;inset:auto 0 max(9px,env(safe-area-inset-bottom));text-align:center;color:#e7fcf5aa;font-size:11px;font-weight:750;pointer-events:none;text-shadow:0 2px 6px #061624}
+.overlay{position:absolute;z-index:3;inset:0;display:grid;place-items:center;padding:max(66px,env(safe-area-inset-top)) 18px max(16px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#0a172c7a,#101b2be2 74%,#0b1626);touch-action:pan-y;overflow:auto}.overlay-card{width:min(100%,355px);padding:22px 17px 17px;border:1px solid #7ba5b380;border-top:2px solid var(--aqua);background:linear-gradient(151deg,#223647f2,#111d2af7 63%);border-radius:8px;box-shadow:0 16px 60px #07101bc2}.overlay-card h1{font-size:clamp(37px,11vw,61px);letter-spacing:-.094em;line-height:1;margin:8px 0 12px}.overlay-card p{color:#c7dbe8;font-size:13px;line-height:1.65;margin:0 0 13px;white-space:pre-line}.action{display:block;width:100%;min-height:49px;margin-top:8px;padding:8px 10px;border:0;border-radius:5px;background:var(--aqua);color:#092c30;font-weight:900;letter-spacing:.025em}.action.alt{background:#243747;color:#e2f3f8;border:1px solid var(--line);min-height:42px}.upgrades{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:9px}.upgrades button{min-height:52px;border:1px solid var(--line);border-radius:4px;background:#233444;font-size:11px;padding:4px 1px;font-weight:780}.upgrades small{display:block;color:#bff4e7;font:800 10px/1.4 ui-monospace,monospace}.bank{display:flex;justify-content:space-between;gap:7px;margin-top:10px;color:#ffe3a1;font:800 11px/1.3 ui-monospace,monospace}.bank span:last-child{color:#b3ced9}.error{margin:0;max-width:30ch;font-size:15px}.kbd{display:none}
+@media(pointer:fine){.kbd{display:inline}}
+@media(max-width:550px){.arena{width:100%}.backmark{display:none}}
+@media(max-height:530px){.overlay{padding-block:42px 8px}.overlay-card{padding:12px}.overlay-card h1{font-size:32px;margin:4px 0 7px}.overlay-card p{font-size:11px;margin-bottom:6px}}
+</style>
+</head>
+<body>
+<main class="shell">
+<div class="backmark" aria-hidden="true">BREAK<br>LINE</div>
+<section class="arena" id="arena" aria-label="전선 돌파 3D 전장">
+<canvas id="world" aria-hidden="true"></canvas><canvas id="labels" aria-hidden="true"></canvas>
+<header class="hud">
+<div class="hud-top">
+<div class="stage"><span id="stage-code">OP / 01</span><strong id="stage-name"></strong></div>
+<div class="count"><span>분대</span><strong id="troops">1</strong></div>
+<button class="tool" id="sound" type="button" aria-label="효과음" aria-pressed="true">♪</button>
+<button class="tool" id="pause" type="button" aria-label="일시정지">Ⅱ</button>
+</div>
+<div class="track" role="progressbar" aria-label="작전 진행률" aria-valuemin="0" aria-valuemax="100" id="progress"><i></i></div>
+<div class="boss" id="boss-hud" hidden><span id="boss-name"></span><div class="track"><i></i></div></div>
+</header>
+<div class="wave" id="wave" role="status" hidden><span></span></div>
+<div class="bottom-hint" id="hint" hidden>↔ 좌우로 드래그 <span class="kbd">· 방향키 또는 A/D</span></div>
+<div class="overlay" id="overlay">
+<div class="overlay-card">
+<div class="micro" id="overline">BREAKLINE / 3D SQUAD RUN</div>
+<h1 id="title">전선 돌파</h1>
+<p id="copy"></p>
+<button class="action" id="primary" type="button">작전 시작</button>
+<button class="action alt" id="secondary" type="button" hidden>작전 선택</button>
+<div class="bank" id="bank"><span id="coins"></span><span id="storage-status"></span></div>
+<div class="upgrades" id="upgrades">
+<button type="button" data-upgrade="troops">시작 병력<small></small></button>
+<button type="button" data-upgrade="power">기본 공격<small></small></button>
+<button type="button" data-upgrade="rate">기본 연사<small></small></button>
+</div>
+</div>
+</div>
+</section>
+</main>
+
+<script>
+"use strict";
+// The simulation is independent of the DOM and renderer.
+const Breakline = (() => {
+  const lanes = [-3.7, 0, 3.7];
+  const ENEMY = {
+    grunt: { hp: 3, speed: 6.5, radius: .43, hit: 1, color: 0xd14d50 },
+    rush: { hp: 2, speed: 11, radius: .39, hit: 1, color: 0xf88546 },
+    shield: { hp: 10, speed: 5.6, radius: .62, hit: 1, color: 0x9d455f },
+    heavy: { hp: 20, speed: 4.6, radius: .85, hit: 2, color: 0xb75949 },
+  };
+  const REWARDS = {
+    troops: { label: '병력', color: 0x53edd1, sign: '+', icon: '✚' },
+    power: { label: '공격', color: 0xffbc62, sign: '+25%', icon: '▲' },
+    rate: { label: '연사', color: 0x70b8ff, sign: '+25%', icon: '»' },
+    spread: { label: '산탄', color: 0xf7de70, sign: '산탄', icon: '✦' },
+    pierce: { label: '관통', color: 0xd1a4ff, sign: '관통탄', icon: '➤' },
+  };
+  // [seconds, lane, reward, amount, base durability]
+  const STAGES = [
+    { name: '외곽 검문소', boss: '램파트', tag: 'RAMPART', bossAt: 56, duration: 73, bossHp: 105, color: 0xf07855,
+      reward: 58, waveGap: 2.1, waveSize: 4, unitTypes: ['grunt','grunt','rush','shield'],
+      boxes: [[1,1,'troops',3,4],[8,0,'troops',4,10],[8,2,'power',1,13],[15,2,'troops',2,15],[15,0,'rate',1,16],
+        [23,1,'spread',1,29],[29,0,'troops',5,29],[29,2,'pierce',1,33],[38,2,'troops',5,38],[38,0,'power',1,39],
+        [47,1,'troops',6,49],[50,2,'rate',1,47]] },
+    { name: '붉은 화물 지구', boss: '벌컨', tag: 'VULCAN', bossAt: 61, duration: 79, bossHp: 135, color: 0xe65d60,
+      reward: 76, waveGap: 1.7, waveSize: 5, unitTypes: ['grunt','rush','shield','shield','heavy'],
+      boxes: [[1,1,'troops',3,5],[7,2,'troops',3,12],[8,0,'pierce',1,15],[14,0,'troops',3,18],[17,2,'rate',1,20],
+        [23,1,'power',1,28],[28,2,'troops',5,36],[32,0,'spread',1,39],[37,0,'troops',6,43],[42,2,'pierce',1,49],
+        [48,1,'troops',6,58],[53,2,'power',1,59]] },
+    { name: '최후의 방벽', boss: '오버시어', tag: 'OVERSEER', bossAt: 65, duration: 85, bossHp: 165, color: 0xdc77e8,
+      reward: 105, waveGap: 1.55, waveSize: 6, unitTypes: ['rush','shield','grunt','heavy','heavy'],
+      boxes: [[1,1,'troops',3,6],[7,0,'troops',3,14],[8,2,'spread',1,16],[14,2,'troops',3,21],[17,0,'power',1,25],
+        [24,1,'pierce',1,30],[29,0,'troops',6,42],[33,2,'rate',1,46],[38,2,'troops',6,49],[43,0,'power',1,56],
+        [49,1,'troops',7,64],[55,0,'pierce',1,67],[57,2,'spread',1,68]] },
+  ];
+  const UPGRADES = { troops: [30, 3], power: [40, 5], rate: [35, 5] };
+  const SAVE_KEY = 'mobileLab.breakline.v1';
+  const LIMITS = { soldiers: 32, enemies: 104, boxes: 12, bullets: 300, sparks: 170, fallen: 30, popups: 12 };
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const approach = (from, to, strength, dt) => from + (to - from) * Math.min(1, strength * dt);
+  function number(value, max) {
+    return Number.isSafeInteger(value) ? clamp(value, 0, max) : 0;
+  }
+  function normalizeSave(input) {
+    const raw = input?.version === 1 ? input : {};
+    return { version: 1, coins: number(raw.coins, 999999), unlocked: number(raw.unlocked, STAGES.length - 1),
+      sound: raw.sound !== false, seen: raw.seen === true,
+      best: STAGES.map((_, i) => number(raw.best?.[i], 999999)),
+      upgrades: Object.fromEntries(Object.entries(UPGRADES).map(([key, [, cap]]) => [key, number(raw.upgrades?.[key], cap)])) };
+  }
+  function cost(key, level) { return Math.round(UPGRADES[key][0] * 1.68 ** level); }
+  function buy(save, key) {
+    if (!Object.hasOwn(UPGRADES, key)) return false;
+    const level = save.upgrades[key], price = cost(key, level);
+    if (level >= UPGRADES[key][1] || save.coins < price) return false;
+    save.coins -= price;
+    save.upgrades[key]++;
+    return true;
+  }
+
+  function pool(size) {
+    return Array.from({ length: size }, () => ({ active: false }));
+  }
+  function slot(list) { return list.find(item => !item.active); }
+
+  function create(stageIndex = 0, meta = {}, options = {}) {
+    const stage = STAGES[stageIndex];
+    const random = options.random || Math.random;
+    const onEvent = options.onEvent || (() => {});
+    const state = {
+      stage, stageIndex, time: 0, x: 0, target: 0, count: 0, killed: 0, opened: 0, status: 'play',
+      damage: 1 + .18 * (meta.power || 0), rate: 1 + .13 * (meta.rate || 0), spread: false, pierce: false,
+      soldiers: pool(LIMITS.soldiers), enemies: pool(LIMITS.enemies), boxes: pool(LIMITS.boxes),
+      bullets: pool(LIMITS.bullets), sparks: pool(LIMITS.sparks), fallen: pool(LIMITS.fallen), popups: pool(LIMITS.popups),
+      boss: null, shake: 0, warning: null, quality: 1,
+    };
+    let nextWave = 5.4, wave = 0, nextBox = 0, bossBorn = false, uid = 0, invulnerable = 0;
+
+    function addSoldiers(amount, fresh = true) {
+      const added = Math.min(amount, LIMITS.soldiers - state.count);
+      for (let i = 0; i < added; i++) {
+        const s = slot(state.soldiers);
+        Object.assign(s, { active: true, x: state.x + (i % 3 - 1) * .26, z: -.4 - i * .08, phase: random() * 8,
+          cooldown: fresh ? .05 + i * .029 : .18 + i * .11, join: fresh ? .75 : 0, flash: 0 });
+      }
+      state.count += added;
+      return added;
+    }
+    addSoldiers(1 + (meta.troops || 0), false);
+
+    function burst(x, y, z, color, amount, strength = 1) {
+      const count = Math.ceil(amount * state.quality);
+      for (let i = 0; i < count; i++) {
+        const p = slot(state.sparks);
+        if (!p) break;
+        const life = .18 + random() * .38;
+        Object.assign(p, { active: true, x, y, z, color, life, duration: life, size: .035 + random() * .13,
+          vx: (random() - .5) * 9 * strength, vy: (1 + random() * 6) * strength, vz: (random() - .5) * 9 * strength });
+      }
+    }
+
+    function popup(x, z, text, color) {
+      const p = slot(state.popups);
+      if (p) Object.assign(p, { active: true, x, z, text, color, life: 1.05 });
+    }
+
+    function spawnBox(spec) {
+      const [, lane, kind, amount, base] = spec;
+      const b = slot(state.boxes);
+      if (!b) return;
+      const hp = Math.round(base * (1 + .018 * Math.max(0, state.count - 6)));
+      Object.assign(b, { active: true, id: ++uid, x: lanes[lane], z: 26, hp, maxHp: hp, kind, amount, radius: 1.02,
+        speed: 5.6, flash: 0, reward: REWARDS[kind] });
+    }
+
+    function spawnEnemy(type, x, z) {
+      const e = slot(state.enemies);
+      if (!e) return;
+      const def = ENEMY[type];
+      const hp = Math.ceil(def.hp * (1 + .13 * stageIndex));
+      Object.assign(e, { ...def, hp, maxHp: hp, active: true, id: ++uid, type, x, home: x, z,
+        phase: random() * 8, flash: 0, knock: 0, speed: def.speed * (.91 + random() * .18) });
+    }
+
+    function spawnWave() {
+      wave++;
+      const count = stage.waveSize + Math.floor(state.time / 14) + (wave % 4 === 0 ? 3 : 0);
+      const primary = (wave + stageIndex * 2) % lanes.length;
+      for (let i = 0; i < count; i++) {
+        const lane = (primary + (wave % 4 === 0 ? i % 3 : Math.floor(i / 4))) % lanes.length;
+        const pool = stage.unitTypes;
+        const type = state.time < 15 ? (i % 5 === 4 ? 'rush' : 'grunt') : pool[(wave + i * 3) % pool.length];
+        spawnEnemy(type, lanes[lane] + (i % 4 - 1.5) * .65, 29 + Math.floor(i / 3) * 2.2 + random() * 2);
+      }
+      if (wave === 1 || wave % 7 === 0) onEvent('wave', wave);
+    }
+
+    function spawnBoss() {
+      bossBorn = true;
+      const firepower = state.count * state.damage * state.rate * (state.spread ? 1.45 : 1);
+      const hp = Math.round(stage.bossHp + firepower * (25 + stageIndex * 2.5));
+      state.boss = { active: true, id: ++uid, type: 'boss', hp, maxHp: hp, x: 0, z: 43,
+        radius: 2.4, speed: 4.0, color: stage.color, flash: 0, knock: 0, phase: 0, nextAttack: state.time + 2.8 };
+      onEvent('boss', stage.boss);
+    }
+
+    function targets() {
+      return state.boss?.active ? [state.boxes, state.enemies, [state.boss]] : [state.boxes, state.enemies];
+    }
+
+    function acquire(groups, soldier) {
+      let picked = null, best = Infinity;
+      for (const group of groups) for (const target of group) {
+        if (!target.active || target.z <= soldier.z + .4 || target.z > 53) continue;
+        const dx = Math.abs(target.x - state.x);
+        const tolerance = (target.reward ? 1.05 : 1.30) + target.radius * .58 + target.z * .015;
+        if (dx > tolerance) continue;
+        const score = dx * 8 + target.z * .64 - (target.reward ? 7 : 0);
+        if (score < best) { picked = target; best = score; }
+      }
+      return picked;
+    }
+
+    function shoot(soldier, groups) {
+      const b = slot(state.bullets);
+      if (!b) return;
+      const goal = acquire(groups, soldier);
+      const speed = 58;
+      const z = soldier.z + .75;
+      const travel = goal ? Math.max(.03, (goal.z - z) / (speed + goal.speed)) : 1;
+      const vx = goal ? clamp((goal.x - soldier.x) / travel, -25, 25) : 0;
+      Object.assign(b, { active: true, x: soldier.x + .10, z, y: 1.15, vx, speed, life: .96, dmg: state.damage,
+        hits: state.pierce ? 3 : 1, hit1: 0, hit2: 0, lastX: soldier.x, lastZ: z - .3 });
+      if (state.spread) for (const sign of [-1, 1]) {
+        const pellet = slot(state.bullets);
+        if (!pellet) break;
+        Object.assign(pellet, b, { vx: vx + 10 * sign, dmg: state.damage * .54, life: .74 });
+      }
+      soldier.flash = .10;
+      if (random() < .28) burst(soldier.x + .29, 1.13, z - .22, 0xfbd781, 1, .45);
+      onEvent('shot');
+    }
+
+    function fall(unit, allied) {
+      const corpse = slot(state.fallen);
+      if (corpse) Object.assign(corpse, { active: true, x: unit.x, z: unit.z, type: unit.type || 'ally',
+        color: allied ? 0x52bcfa : unit.color, life: .48, phase: unit.phase });
+    }
+
+    function removeSoldiers(amount, x) {
+      if (invulnerable > 0) return;
+      let removed = 0;
+      for (let i = 0; i < amount; i++) {
+        let nearest = null, best = Infinity;
+        for (const soldier of state.soldiers) {
+          if (!soldier.active) continue;
+          const score = Math.abs(soldier.x - x) + soldier.z * .08;
+          if (score < best) { best = score; nearest = soldier; }
+        }
+        if (!nearest) break;
+        fall(nearest, true);
+        burst(nearest.x, .8, nearest.z, 0x7ed9ff, 11);
+        nearest.active = false;
+        removed++;
+      }
+      if (!removed) return;
+      state.count -= removed;
+      invulnerable = .46;
+      popup(state.x, 1.2, '−' + removed, 0xff846c);
+      state.shake = .31;
+      onEvent('hurt', removed);
+      if (!state.count) end('loss');
+    }
+
+    function end(status) {
+      if (state.status !== 'play') return;
+      state.status = status;
+      state.warning = null;
+      onEvent(status);
+    }
+
+    function breakBox(box) {
+      box.active = false;
+      state.opened++;
+      const { kind, x, z, reward, amount } = box;
+      burst(x, 1.4, z, reward.color, 25, 1.15);
+      let message = reward.sign;
+      if (kind === 'troops') {
+        const added = addSoldiers(amount);
+        message = added ? '+' + added + ' 병력' : '분대 최대';
+        burst(state.x, .45, 1, reward.color, 28, .9);
+      } else if (kind === 'power') state.damage *= 1.25;
+      else if (kind === 'rate') state.rate = Math.min(3.1, state.rate * 1.25);
+      else if (kind === 'spread') {
+        if (state.spread) { state.damage *= 1.12; message = '산탄 강화'; }
+        state.spread = true;
+      } else if (kind === 'pierce') {
+        if (state.pierce) { state.damage *= 1.12; message = '관통 강화'; }
+        state.pierce = true;
+      }
+      popup(kind === 'troops' ? state.x : x, kind === 'troops' ? 4 : z, message, reward.color);
+      state.shake = .22;
+      onEvent('crate', kind);
+    }
+
+    function damage(target, amount) {
+      target.hp = Math.max(0, target.hp - amount);
+      target.flash = .125;
+      if (!target.reward) target.knock = Math.min(1.6, (target.knock || 0) + .45);
+      if (target.hp > 0) {
+        if (target.reward || random() < .38) burst(target.x, 1.2, target.z, target.reward?.color || 0xffc07b, 3);
+        return;
+      }
+      if (target.reward) { breakBox(target); return; }
+      target.active = false;
+      state.killed++;
+      if (target.type === 'boss') {
+        burst(target.x, 2.5, target.z, stage.color, 75, 1.8);
+        state.shake = .6;
+        end('win');
+      } else {
+        fall(target, false);
+        burst(target.x, .92, target.z, 0xff896c, 5);
+        onEvent('kill');
+      }
+    }
+
+    function hitBullet(b, groups) {
+      // Use the segment for collision so fast tracers do not pass through small targets.
+      let earliest = null, nearest = Infinity;
+      for (const group of groups) for (const target of group) {
+        if (!target.active || target.id === b.hit1 || target.id === b.hit2) continue;
+        if (target.z + target.radius < b.lastZ || target.z - target.radius > b.z) continue;
+        const f = clamp((target.z - b.lastZ) / (b.z - b.lastZ), 0, 1);
+        const x = b.lastX + (b.x - b.lastX) * f;
+        const d = Math.abs(target.x - x);
+        if (d <= target.radius + .11 && target.z < nearest) { earliest = target; nearest = target.z; }
+      }
+      if (!earliest) return;
+      damage(earliest, b.dmg);
+      b.hits--;
+      b.hit2 = b.hit1;
+      b.hit1 = earliest.id;
+      if (!b.hits || earliest.reward) b.active = false;
+      else b.dmg *= .78;
+    }
+
+    function moveUnits(dt, allowCombat) {
+      const shift = Math.min(2.30, .36 * (Math.min(5, Math.ceil(Math.sqrt(state.count * .85))) - 1));
+      state.x = approach(state.x, clamp(state.target, -5.0 + shift, 5.0 - shift), 16, dt);
+      const columns = clamp(Math.ceil(Math.sqrt(state.count * .9)), 1, 6);
+      let index = 0;
+      const groups = targets();
+      for (const s of state.soldiers) {
+        if (!s.active) continue;
+        const row = Math.floor(index / columns), column = index % columns;
+        const width = Math.min(columns, state.count - row * columns);
+        const localX = (column - (width - 1) / 2) * .66 + (row % 2 ? .17 : 0);
+        s.x = approach(s.x, state.x + localX, 13, dt);
+        s.z = approach(s.z, .1 - row * .49, 10, dt);
+        s.join = Math.max(0, s.join - dt);
+        s.flash = Math.max(0, s.flash - dt);
+        s.cooldown -= dt;
+        if (allowCombat && s.cooldown <= 0) {
+          shoot(s, groups);
+          s.cooldown += (.25 + random() * .035) / state.rate;
+        }
+        index++;
+      }
+    }
+
+    function moveEnemies(dt) {
+      for (let i = 0; i < state.enemies.length; i++) {
+        const e = state.enemies[i];
+        if (!e.active) continue;
+        const target = clamp(e.home + (state.x - e.home) * (e.type === 'rush' ? .67 : .38), -5.2, 5.2);
+        e.x = approach(e.x, target, .73, dt);
+        for (let j = Math.max(0, i - 11); j < i; j++) {
+          const other = state.enemies[j];
+          const dx = e.x - other.x;
+          if (other.active && Math.abs(e.z - other.z) < .83 && Math.abs(dx) < .70) {
+            const push = Math.sign(dx || 1) * dt * .86;
+            e.x += push;
+            other.x -= push;
+          }
+        }
+        e.x = clamp(e.x, -5.55, 5.55);
+        e.z -= (e.speed - e.knock * 2) * dt;
+        e.flash = Math.max(0, e.flash - dt);
+        e.knock = Math.max(0, e.knock - dt * 5);
+        if (e.z < 1.1 && e.z > -1.35 && state.soldiers.some(s => s.active && Math.abs(s.x - e.x) < e.radius + .34 && Math.abs(s.z - e.z) < .70)) {
+          removeSoldiers(e.hit, e.x);
+          e.active = false;
+          burst(e.x, .6, e.z, 0xffa477, 7);
+        } else if (e.z < -4) e.active = false;
+      }
+
+      const boss = state.boss;
+      if (!boss?.active) return;
+      const bossIndex = state.stageIndex;
+      boss.flash = Math.max(0, boss.flash - dt);
+      boss.z = Math.max(14, boss.z - dt * boss.speed);
+      const x = bossIndex === 0 ? 0 : Math.sin((state.time - stage.bossAt) * (bossIndex === 1 ? .52 : .78)) * (bossIndex === 1 ? 2.15 : 2.8);
+      boss.x = approach(boss.x, x, 2, dt);
+      if (state.warning && state.time >= state.warning.impact) {
+        const warning = state.warning;
+        state.warning = null;
+        burst(warning.x, .3, 2, stage.color, 36, 1.55);
+        state.shake = .30;
+        if (Math.abs(state.x - warning.x) < warning.width / 2 + .35) removeSoldiers(2 + bossIndex, warning.x);
+        onEvent('slam');
+      }
+      if (!state.warning && state.time >= boss.nextAttack) {
+        state.warning = { x: clamp(state.x, -4.3, 4.3), width: 2.1 + bossIndex * .52, start: state.time, impact: state.time + 1.45 };
+        boss.nextAttack = state.time + 4.35 - bossIndex * .46;
+        onEvent('warn');
+      }
+    }
+
+    function effects(dt) {
+      state.shake = Math.max(0, state.shake - dt);
+      for (const p of state.sparks) {
+        if (!p.active) continue;
+        p.life -= dt;
+        if (p.life <= 0) { p.active = false; continue; }
+        p.x += p.vx * dt; p.z += p.vz * dt; p.y = Math.max(.05, p.y + p.vy * dt); p.vy -= 15 * dt;
+      }
+      for (const list of [state.popups, state.fallen]) for (const p of list) {
+        if (p.active && (p.life -= dt) <= 0) p.active = false;
+      }
+    }
+
+    function step(dt) {
+      effects(dt);
+      if (state.status !== 'play') return;
+      state.time += dt;
+      while (stage.boxes[nextBox] && state.time >= stage.boxes[nextBox][0]) spawnBox(stage.boxes[nextBox++]);
+      if (state.time >= nextWave && state.time < stage.bossAt + 3) {
+        spawnWave();
+        nextWave += stage.waveGap;
+      }
+      if (!bossBorn && state.time >= stage.bossAt) spawnBoss();
+      moveUnits(dt, true);
+      for (const box of state.boxes) {
+        if (!box.active) continue;
+        box.z -= box.speed * dt;
+        box.flash = Math.max(0, box.flash - dt);
+        if (box.z < -.6) box.active = false;
+      }
+      moveEnemies(dt);
+      if (state.status !== 'play') return;
+      const groups = targets();
+      for (const b of state.bullets) {
+        if (!b.active) continue;
+        b.life -= dt;
+        if (b.life <= 0) { b.active = false; continue; }
+        b.lastX = b.x; b.lastZ = b.z;
+        b.x += b.vx * dt; b.z += b.speed * dt;
+        hitBullet(b, groups);
+        if (state.status !== 'play') break;
+      }
+      if (state.status === 'play' && state.time >= stage.duration) end('loss');
+    }
+
+    return { state, step, move: x => { if (Number.isFinite(x)) state.target = clamp(x, -5, 5); } };
+  }
+
+  function finishRun(save, state) {
+    if (state.status === 'play' || state.settled) return 0;
+    state.settled = true;
+    const reward = (state.status === 'win' ? state.stage.reward : 0) + Math.floor(state.killed / 3) + state.opened;
+    save.coins = Math.min(999999, save.coins + reward);
+    save.best[state.stageIndex] = Math.max(save.best[state.stageIndex], state.killed);
+    if (state.status === 'win') save.unlocked = Math.max(save.unlocked, Math.min(STAGES.length - 1, state.stageIndex + 1));
+    return reward;
+  }
+
+  return { STAGES, REWARDS, SAVE_KEY, UPGRADES, LIMITS, normalizeSave, cost, buy, create, finishRun, clamp };
+})();
+function createRenderer(canvas, labels) {
+  const gl = canvas.getContext('webgl', { alpha: false, antialias: true, powerPreference: 'high-performance' })
+    || canvas.getContext('webgl', { alpha: false, antialias: false });
+  if (!gl) throw new Error('이 브라우저에서는 WebGL을 시작할 수 없어요.');
+  const ctx = labels.getContext('2d');
+  function shader(kind, source) {
+    const item = gl.createShader(kind);
+    gl.shaderSource(item, source); gl.compileShader(item);
+    if (!gl.getShaderParameter(item, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(item));
+    return item;
+  }
+  const program = gl.createProgram();
+  gl.attachShader(program, shader(gl.VERTEX_SHADER, `
+    attribute vec3 point; attribute vec3 color;
+    uniform vec3 camera; uniform float aspect;
+    varying mediump vec3 tint; varying mediump float depth;
+    void main() {
+      vec3 p = point - camera;
+      float z = -.36*p.y + .9329523*p.z;
+      float y = .9329523*p.y + .36*p.z;
+      gl_Position = vec4(p.x/(.56*aspect), y/.56, z*1.0144-2.0144, z);
+      tint = color; depth = z;
+    }`));
+  gl.attachShader(program, shader(gl.FRAGMENT_SHADER, `
+    precision mediump float;
+    varying mediump vec3 tint; varying mediump float depth;
+    void main() {
+      vec3 fog = vec3(.185,.288,.389);
+      gl_FragColor = vec4(mix(tint,fog,smoothstep(35.0,112.0,depth)*.85),1.0);
+    }`));
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+  gl.useProgram(program);
+  const location = {
+    camera: gl.getUniformLocation(program, 'camera'), aspect: gl.getUniformLocation(program, 'aspect'),
+    point: gl.getAttribLocation(program, 'point'), color: gl.getAttribLocation(program, 'color'),
+  };
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  const batch = new Float32Array(6 * 132000);
+  gl.bufferData(gl.ARRAY_BUFFER, batch.byteLength, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(location.point);
+  gl.enableVertexAttribArray(location.color);
+  gl.vertexAttribPointer(location.point, 3, gl.FLOAT, false, 24, 0);
+  gl.vertexAttribPointer(location.color, 3, gl.FLOAT, false, 24, 12);
+  gl.enable(gl.DEPTH_TEST);
+  gl.clearColor(.185, .288, .389, 1);
+
+  const cube = [
+    [-.5,-.5,-.5], [.5,-.5,-.5], [.5,.5,-.5], [-.5,.5,-.5],
+    [-.5,-.5,.5], [.5,-.5,.5], [.5,.5,.5], [-.5,.5,.5],
+  ];
+  const faces = [[0,1,2,3,.78],[5,4,7,6,.91],[4,0,3,7,.75],[1,5,6,2,.61],[3,2,6,7,1.12],[4,5,1,0,.52]];
+  const helmet = cube.map(([x,y,z]) => [x * (y > 0 ? .72 : 1), y, z * (y > 0 ? .75 : 1)]);
+  const round = new Float32Array(18);
+  for (let i = 0; i < 9; i++) {
+    round[i * 2] = Math.cos(i * Math.PI / 4);
+    round[i * 2 + 1] = Math.sin(i * Math.PI / 4);
+  }
+  const scratch = new Float32Array(24);
+  const rig = { x: 0, z: 0, cy: 1, sy: 0, cf: 1, sf: 0, hop: 0, scale: 1 };
+  let cursor = 0, width = 1, height = 1, ratio = 1, aspect = .60, cameraX = 0, cameraY = 14;
+  let r = 0, g = 0, b = 0;
+  const css = color => '#' + color.toString(16).padStart(6, '0');
+  function shade(color, light = 1) {
+    r = (color >>> 16) * light / 255;
+    g = ((color >>> 8) & 255) * light / 255;
+    b = (color & 255) * light / 255;
+  }
+  function point(x, y, z) {
+    if (cursor >= batch.length) return;
+    batch[cursor++] = x; batch[cursor++] = y; batch[cursor++] = z;
+    batch[cursor++] = r; batch[cursor++] = g; batch[cursor++] = b;
+  }
+  function emitAt(index) { point(scratch[index * 3], scratch[index * 3 + 1], scratch[index * 3 + 2]); }
+  function box(x, y, z, w, h, d, color, pose = null, pitch = 0, shape = cube) {
+    const cp = Math.cos(pitch), sp = Math.sin(pitch);
+    for (let i = 0; i < 8; i++) {
+      const v = shape[i];
+      let a = x + v[0] * w;
+      let y0 = v[1] * h, z0 = v[2] * d;
+      let q = y + y0 * cp - z0 * sp, e = z + y0 * sp + z0 * cp;
+      if (pose) {
+        y0 = q * pose.cf - e * pose.sf;
+        z0 = q * pose.sf + e * pose.cf;
+        const scale = pose.scale;
+        e = pose.z + (z0 * pose.cy - a * pose.sy) * scale;
+        a = pose.x + (a * pose.cy + z0 * pose.sy) * scale;
+        q = pose.hop + y0 * scale;
+      }
+      scratch[i * 3] = a; scratch[i * 3 + 1] = q; scratch[i * 3 + 2] = e;
+    }
+    for (const [a, c, d0, e, light] of faces) {
+      shade(color, light);
+      emitAt(a); emitAt(c); emitAt(d0); emitAt(a); emitAt(d0); emitAt(e);
+    }
+  }
+  function flat(x, y, z, w, d, color) {
+    shade(color);
+    const a = x - w / 2, b = x + w / 2, c = z - d / 2, e = z + d / 2;
+    point(a,y,c); point(b,y,c); point(b,y,e); point(a,y,c); point(b,y,e); point(a,y,e);
+  }
+  function disc(x, z, radius, color, y = .018) {
+    shade(color);
+    for (let i = 0; i < 16; i += 2) {
+      point(x,y,z); point(x+radius*round[i],y,z+radius*.78*round[i+1]);
+      point(x+radius*round[i+2],y,z+radius*.78*round[i+3]);
+    }
+  }
+  function tracer(o) {
+    const length = 1.2 + o.dmg * .15;
+    const dx = o.vx / o.speed * length;
+    shade(o.hits > 1 ? 0xd7c2ff : 0xffdc79);
+    point(o.x-.045,o.y,o.z); point(o.x+.045,o.y,o.z); point(o.x-dx,o.y,o.z-length);
+    point(o.x,o.y-.035,o.z); point(o.x,o.y+.065,o.z); point(o.x-dx,o.y,o.z-length);
+  }
+  function city(state) {
+    const themes = [
+      [0x334959,0x788d8e,0x536d78,0xbcc7bb,0x2d5663],
+      [0x3b4656,0x7e8285,0x615e72,0xa5afb6,0x664a56],
+      [0x344354,0x687c88,0x4b6077,0xa2bec8,0x394f68],
+    ];
+    const [road, concrete, wall, paint, accent] = themes[state.stageIndex];
+    flat(0,-.02,42,200,137,0x435c72);
+    flat(0,0,45,12.2,121,road);
+    for (let i = -8; i <= 8; i++) {
+      const height = 9 + ((i * i * 17 + state.stageIndex * 11) % 23);
+      const x = i * 6.4, z = 106 + (i * i % 4) * 4;
+      box(x, height / 2 - 1, z, 5.2, height, 6.2, 0x344760);
+      box(x, height - .95, z, 5.4, .14, 6.4, 0x60758a);
+      if (i % 4 === 0) box(x + 1, height + .9, z, .10, 3.8, .10, 0x718599);
+    }
+    const offset = (state.time * 5.6) % 12;
+    const absolute = Math.floor(state.time * 5.6 / 12);
+    for (let i = -1; i < 10; i++) {
+      const z = i * 12 - offset;
+      const seed = (absolute + i + 121) % 7;
+      for (const sign of [-1, 1]) {
+        flat(sign * 2.03,.009,z, .057,4.4,paint);
+        flat(sign * 5.74,.011,z, .084,12.04,0xd4a973);
+        box(sign * 7.12,.15,z, 2.05,.30,12.02,concrete);
+        box(sign * 6.23,.19,z, .23,.38,11.98,wall);
+        if ((seed + sign + 10) % 3 !== 0) {
+          const h = 2.5 + (seed * 11 % 7) * .8;
+          const x = sign * (9.3 + (seed % 2) * .8);
+          box(x,h/2,z,3.0,h,8.8,seed % 2 ? wall : accent);
+          box(x,h+.10,z,3.16,.20,9.0,concrete);
+          for (let band = 1; band < Math.min(5, h); band++) {
+            box(x-sign*1.51,band,z,.028,.28,5.9, band % 3 ? 0x253e50 : 0x7ca5ae);
+          }
+        }
+        if (i < 7 && (seed + 9) % 3 === 0) {
+          box(sign*6.65,1.87,z+2,.1,3.7,.1,0x2b3543);
+          box(sign*6.43,3.65,z+2,.52,.13,.23,0x233242);
+          box(sign*6.39,3.58,z+2,.31,.05,.17,0xffd790);
+        }
+        if (i < 5 && seed % 2 === 0) {
+          for (let k = -1; k < 2; k++) box(sign*5.98,.43,z+2.6+k*.77,.32,.68,.71,k === 0 ? 0xc7854d : wall);
+        }
+      }
+      if (i < 8 && seed % 3 === 2) for (let k = -4; k <= 4; k++) flat(k * 1.2,.012,z-3.7,.69,1.5,0x82999f);
+    }
+    if (state.warning) {
+      const { x, width, start } = state.warning;
+      const pulse = Math.floor((state.time - start) * 13) % 2;
+      flat(x,.023,18,width,39,pulse ? 0x6e3d4e : 0x714a4f);
+      flat(x-width/2,.027,18,.10,39,0xff8a56);
+      flat(x+width/2,.027,18,.10,39,0xff8a56);
+      for (let i = 0; i < 5; i++) flat(x,.028,i*6+2,width,.15,0xffbe65);
+    }
+  }
+  function unit(o, allied, time, fallen = false) {
+    const type = o.type || 'ally';
+    const boss = type === 'boss';
+    const heavy = type === 'heavy' || boss;
+    const rush = type === 'rush';
+    const timePhase = time * (rush ? 18 : 13) + o.phase;
+    const stride = fallen ? 0 : Math.sin(timePhase) * .55;
+    const drop = allied && o.join > 0 ? Math.max(0, (o.join - .25) * 2.3) : 0;
+    const fall = fallen ? (.48 - o.life) * 2.8 : 0;
+    rig.x = o.x; rig.z = o.z;
+    rig.cy = allied ? 1 : -1; rig.sy = 0;
+    rig.cf = Math.cos(fall); rig.sf = Math.sin(fall);
+    rig.hop = fallen ? .03 : drop + Math.abs(stride) * .09;
+    rig.scale = boss ? 2.95 : (heavy ? 1.43 : (rush ? .91 : 1));
+    const base = allied ? 0x429bdc : o.color;
+    const armor = o.flash > .07 && Math.floor(time * 28) % 3 === 0 ? 0xffe3b3 : base;
+    const cloth = allied ? 0x253e60 : 0x352c3c;
+    const trim = allied ? 0x9ce6ee : (boss ? 0xffc784 : 0xff925f);
+    if (!fallen) disc(o.x,o.z,.45*rig.scale,0x243845);
+    if (drop > .01) disc(o.x,o.z,.42 + o.join*.44,0x67cbb1,.026);
+    for (const sign of [-1, 1]) {
+      box(sign*.143,.26,sign*stride*.22,.184,.47,.19,cloth,rig,sign*stride);
+      box(sign*.143,.075,sign*stride*.25+.04,.195,.15,.27,0x253042,rig);
+      box(sign*.33,.91,.02+(allied ? .08 : sign*stride*.19),.17,.39,.18,armor,rig,allied ? -.49 : sign*stride);
+      if (heavy) box(sign*.345,1.11,0,.27,.24,.29,0x473b4b,rig,0,helmet);
+    }
+    box(0,.59,0,.43,.18,.29,cloth,rig);
+    box(0,.89,0,heavy ? .58 : .45,.47,.31,armor,rig,0,helmet);
+    box(0,.94,.17,.27,.16,.047,trim,rig);
+    box(0,.90,-.20,.29,.33,.14,0x2b3b50,rig);
+    box(0,1.285,0,.33,.31,.32,armor,rig,0,helmet);
+    box(0,1.252,.153,.247,.073,.048,allied ? 0x14334b : 0x2e2334,rig);
+    box(0,1.254,.181,.147,.037,.012,trim,rig);
+    if (allied || heavy) {
+      const recoil = (o.flash || 0) * .66;
+      box(.26,1.04,.33-recoil,.15,.17,heavy ? .60 : .51,0x24313e,rig);
+      box(.26,1.087,.61-recoil,.074,.08,.24,0x879da5,rig);
+      if (allied && o.flash > .04 && !fallen) box(.26,1.086,.79,.15,.14,.28,0xffda6a,rig,0,helmet);
+    }
+    if (type === 'shield') {
+      box(.30,.72,.30,.48,.96,.17,0x48394f,rig,0,helmet);
+      box(.30,.74,.395,.32,.68,.036,armor,rig);
+      box(.30,.75,.418,.065,.52,.026,trim,rig);
+    }
+    if (boss) {
+      box(-.39,1.02,.34,.26,.25,.67,0x584657,rig);
+      box(-.39,1.05,.69,.19,.17,.20,trim,rig);
+      box(0,1.55,0,.11,.25,.13,trim,rig);
+    }
+  }
+  function crate(o) {
+    const jitter = o.flash ? Math.sin(o.flash * 72) * .095 : 0;
+    const x = o.x + jitter, z = o.z;
+    const c = o.flash > .07 ? 0xf6ffed : o.reward.color;
+    disc(x,z,.99,0x233948);
+    box(x,.67,z,1.64,1.29,1.45,0x263d53,null,0,helmet);
+    box(x,1.28,z,1.66,.15,1.47,c,null,0,helmet);
+    box(x,.16,z,1.68,.14,1.46,c);
+    for (const sign of [-1, 1]) {
+      box(x+sign*.63,.72,z-.737,.105,1.0,.054,c);
+      box(x+sign*.82,.75,z,.08,.89,.88,0x48586b);
+    }
+    box(x,.72,z-.746,.86,.58,.059,c,null,0,helmet);
+    box(x,.73,z-.784,.43,.24,.027,0x18354a);
+  }
+
+  function project(x, y, z) {
+    const ry = y - cameraY, rz = z + 15;
+    const d = -.36*ry + .9329523*rz;
+    return [(1+(x-cameraX)/(.56*aspect*d))*width/2,(1-(.9329523*ry+.36*rz)/(.56*d))*height/2,d];
+  }
+  function overlay(state) {
+    ctx.clearRect(0,0,width,height);
+    for (const o of state.boxes) {
+      if (!o.active) continue;
+      const [x,y,depth] = project(o.x,1.75,o.z);
+      const scale = Math.min(1, Math.max(.65, 32 / depth));
+      ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+      const color = css(o.reward.color);
+      const caption = o.kind === 'troops' ? '✚ +' + o.amount + ' 병력' : o.reward.icon + ' ' + (o.kind === 'power' || o.kind === 'rate' ? o.reward.label + ' ' + o.reward.sign : o.reward.sign);
+      ctx.textAlign = 'center';
+      ctx.font = '900 12px system-ui';
+      const w = Math.max(62,ctx.measureText(caption).width+13);
+      ctx.fillStyle = '#101e2cf0'; ctx.fillRect(-w/2,-43,w,38);
+      ctx.fillStyle = color; ctx.fillRect(-w/2,-43,w,2);
+      ctx.fillText(caption,0,-29);
+      ctx.fillStyle = '#fff6e5'; ctx.font = '900 17px ui-monospace,monospace'; ctx.fillText(Math.ceil(o.hp),0,-12);
+      ctx.fillStyle = '#506273'; ctx.fillRect(-w/2,-8,w,3);
+      ctx.fillStyle = color; ctx.fillRect(-w/2,-8,w*(o.hp/o.maxHp),3);
+      ctx.restore();
+    }
+    for (const p of state.popups) {
+      if (!p.active) continue;
+      const [x,y] = project(p.x,1.9+(1-p.life)*2,p.z);
+      ctx.save(); ctx.globalAlpha = Math.min(1,p.life*3);
+      ctx.textAlign = 'center'; ctx.font = '900 20px system-ui';
+      ctx.lineWidth = 4; ctx.strokeStyle = '#152536'; ctx.strokeText(p.text,x,y);
+      ctx.fillStyle = css(p.color); ctx.fillText(p.text,x,y); ctx.restore();
+    }
+    if (state.warning) {
+      const [x,y] = project(state.warning.x,.03,6);
+      ctx.font = '900 15px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 4;
+      ctx.strokeStyle = '#541c25'; ctx.strokeText('⚠  충격 예고',x,y);
+      ctx.fillStyle = '#ffdc91'; ctx.fillText('⚠  충격 예고',x,y);
+    }
+  }
+  function resize(quality) {
+    const w = Math.max(1, canvas.clientWidth), h = Math.max(1, canvas.clientHeight);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const scale = Math.min(dpr * quality, 1080 / h);
+    if (w === width && h === height && scale === ratio && canvas.width === Math.round(w*scale)) return;
+    width = w; height = h; ratio = scale; aspect = Math.max(.55, w / h);
+    canvas.width = Math.max(1,Math.round(w*scale)); canvas.height = Math.max(1,Math.round(h*scale));
+    labels.width = Math.max(1,Math.round(w*dpr)); labels.height = Math.max(1,Math.round(h*dpr));
+    ctx.setTransform(labels.width/w,0,0,labels.height/h,0,0);
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }
+  function draw(state, quality = 1) {
+    if (gl.isContextLost()) return;
+    resize(quality);
+    const shake = state.shake * .34;
+    cameraX = Math.sin(state.time*89) * shake;
+    cameraY = 14 + Math.cos(state.time*75)*shake;
+    gl.uniform3f(location.camera,cameraX,cameraY,-15);
+    gl.uniform1f(location.aspect,aspect);
+    cursor = 0;
+    city(state);
+    for (const box of state.boxes) if (box.active) crate(box);
+    for (const o of state.enemies) if (o.active) unit(o,false,state.time);
+    for (const o of state.soldiers) if (o.active) unit(o,true,state.time);
+    if (state.boss?.active) unit(state.boss,false,state.time);
+    for (const o of state.fallen) if (o.active) unit(o,o.type === 'ally',state.time,true);
+    for (const o of state.bullets) if (o.active) tracer(o);
+    for (const p of state.sparks) if (p.active) box(p.x,p.y,p.z,p.size,p.size*(1+p.life),p.size,p.color);
+    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    gl.bufferSubData(gl.ARRAY_BUFFER,0,batch.subarray(0,cursor));
+    gl.drawArrays(gl.TRIANGLES,0,cursor/6);
+    overlay(state);
+  }
+  return { draw };
+}
+(() => {
+  const el = id => document.getElementById(id);
+  const arena = el('arena'), canvas = el('world'), overlay = el('overlay');
+  const stageName = el('stage-name'), stageCode = el('stage-code'), troops = el('troops');
+  const bossHud = el('boss-hud'), progress = el('progress'), wave = el('wave');
+  const primary = el('primary'), secondary = el('secondary'), pause = el('pause'), sound = el('sound');
+  const upgrades = el('upgrades'), bank = el('bank'), hint = el('hint');
+  const { STAGES, UPGRADES, SAVE_KEY, normalizeSave, finishRun, create, clamp } = Breakline;
+  let save, storage = true;
+  try { save = normalizeSave(JSON.parse(localStorage.getItem(SAVE_KEY))); }
+  catch { save = normalizeSave(null); }
+
+  let mode = 'ready', selected = save.unlocked, active, earned = 0, pointer = null, pointerX = 0;
+  let audio, lastShot = -Infinity, lastKill = -Infinity, waveUntil = 0, waveText = '';
+  let renderer, previous = 0, accumulator = 0, currentQuality = 1, slow = 0, fast = 0;
+  let sceneDirty = true, ending = 0;
+  const keys = new Set();
+
+  function persist() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); storage = true; }
+    catch { storage = false; }
+    el('storage-status').textContent = storage ? '' : '이 브라우저에서는 저장 제한';
+  }
+
+  function arm() {
+    if (!save.sound) return;
+    try {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume().catch(() => {});
+    } catch { /* Sound is optional. */ }
+  }
+
+  function cue(kind) {
+    if (!audio || audio.state !== 'running' || !save.sound) return;
+    const map = { shot:[116,50,.042,.035], kill:[222,115,.073,.05], crate:[285,630,.19,.10],
+      hurt:[125,47,.18,.085], boss:[190,77,.30,.085], warn:[420,680,.15,.06],
+      slam:[96,36,.29,.08], win:[391,790,.37,.08], loss:[290,90,.35,.06] };
+    const entry = map[kind];
+    if (!entry) return;
+    const now = audio.currentTime;
+    if (kind === 'shot') {
+      if (now - lastShot < .079) return;
+      lastShot = now;
+    }
+    if (kind === 'kill') {
+      if (now - lastKill < .088) return;
+      lastKill = now;
+    }
+    const [from,to,duration,volume] = entry;
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.type = kind === 'shot' || kind === 'slam' ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(from, now);
+    osc.frequency.exponentialRampToValueAtTime(to, now + duration);
+    gain.gain.setValueAtTime(volume, now);
+    gain.gain.exponentialRampToValueAtTime(.001, now + duration);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(now); osc.stop(now + duration);
+  }
+
+  function clearInput() {
+    if (pointer !== null && arena.hasPointerCapture(pointer)) arena.releasePointerCapture(pointer);
+    pointer = null;
+    keys.clear();
+  }
+  function announce(text, seconds) { waveText = text; waveUntil = active.state.time + seconds; }
+  function onEvent(type, value) {
+    cue(type);
+    if (type === 'wave') announce('웨이브 ' + String(value).padStart(2, '0'), 1.3);
+    if (type === 'boss') announce('위험 · ' + value + ' 접근', 2);
+    if (type === 'win' || type === 'loss') {
+      earned = finishRun(save, active.state);
+      persist();
+      mode = type;
+      ending = .68;
+      clearInput();
+      renderMenu();
+    }
+  }
+  function resetRun() {
+    active = create(selected, save.upgrades, { onEvent });
+    active.state.quality = currentQuality < .8 ? .61 : 1;
+    waveText = ''; waveUntil = 0; accumulator = 0; ending = 0; sceneDirty = true;
+    stageName.textContent = STAGES[selected].name;
+    stageCode.textContent = 'OP / ' + String(selected + 1).padStart(2, '0');
+    el('boss-name').textContent = STAGES[selected].tag;
+  }
+  function renderMenu() {
+    overlay.hidden = mode === 'play';
+    hint.hidden = mode !== 'play';
+    pause.disabled = mode !== 'play';
+    upgrades.hidden = mode === 'pause' || mode === 'error';
+    bank.hidden = upgrades.hidden;
+    secondary.hidden = false;
+    if (mode === 'ready') {
+      el('overline').textContent = 'BREAKLINE / OP ' + String(selected + 1).padStart(2,'0');
+      el('title').textContent = '전선 돌파';
+      el('copy').textContent = save.seen ? STAGES[selected].name + ' · ' + STAGES[selected].duration + '초 작전'
+        : '좌우로 드래그해 분대를 이동하세요. 사격은 자동입니다.\n보급 상자를 쏴서 부수면 병력이 합류합니다.';
+      primary.textContent = '작전 시작';
+      secondary.textContent = '다음 작전 선택';
+      secondary.hidden = save.unlocked === 0;
+    } else if (mode === 'pause') {
+      el('overline').textContent = 'TACTICAL PAUSE';
+      el('title').textContent = '일시정지';
+      el('copy').textContent = '분대와 전장의 움직임을 멈췄어요.';
+      primary.textContent = '작전 재개';
+      secondary.textContent = '작전 선택으로';
+    } else if (mode === 'win' || mode === 'loss') {
+      const win = mode === 'win';
+      el('overline').textContent = win ? 'OPERATION COMPLETE' : 'SQUAD LOST';
+      el('title').textContent = win ? '돌파 성공' : '작전 실패';
+      const { time, killed, opened, count } = active.state;
+      const cause = !win && count ? '작전 시간 초과\n' : '';
+      el('copy').textContent = cause + Math.floor(time) + '초 · 적 ' + killed + '기 제압 · 보급 ' + opened + '개\n획득 코인 +' + earned;
+      primary.textContent = win && selected < STAGES.length - 1 ? '다음 작전' : '다시 시작';
+      secondary.textContent = '작전 선택으로';
+    } else if (mode === 'error') {
+      el('overline').textContent = 'RENDERER UNAVAILABLE';
+      el('title').textContent = '3D 실행 제한';
+      primary.textContent = '다시 불러오기';
+      secondary.hidden = true;
+    }
+    el('coins').textContent = '◈ ' + save.coins + ' 코인';
+    for (const button of upgrades.querySelectorAll('button')) {
+      const key = button.dataset.upgrade, level = save.upgrades[key], cost = Breakline.cost(key, level);
+      const max = level >= UPGRADES[key][1];
+      button.disabled = max || save.coins < cost;
+      button.querySelector('small').textContent = max ? 'Lv.' + level + ' MAX' : 'Lv.' + level + ' / ' + cost + '◈';
+    }
+  }
+  function start() {
+    arm();
+    resetRun();
+    save.seen = true;
+    persist();
+    mode = 'play';
+    clearInput();
+    renderMenu();
+    announce(STAGES[selected].name, 1.12);
+  }
+  function stop() {
+    if (mode !== 'play') return;
+    mode = 'pause';
+    accumulator = 0;
+    clearInput();
+    renderMenu();
+  }
+  function resume() {
+    arm();
+    mode = 'play';
+    clearInput();
+    accumulator = 0;
+    renderMenu();
+  }
+  function soundLabel() {
+    sound.setAttribute('aria-pressed', String(save.sound));
+    sound.textContent = save.sound ? '♪' : '♪×';
+    sound.title = save.sound ? '효과음 끄기' : '효과음 켜기';
+  }
+  primary.addEventListener('click', () => {
+    if (mode === 'error') { location.reload(); return; }
+    if (mode === 'pause') { resume(); return; }
+    if (mode === 'win' && selected < STAGES.length - 1) selected++;
+    start();
+  });
+  secondary.addEventListener('click', () => {
+    if (mode === 'ready') selected = (selected + 1) % (save.unlocked + 1);
+    mode = 'ready';
+    resetRun(); renderMenu();
+  });
+  pause.addEventListener('click', stop);
+  sound.addEventListener('click', () => {
+    save.sound = !save.sound;
+    if (save.sound) arm();
+    persist(); soundLabel();
+  });
+  upgrades.addEventListener('click', event => {
+    const key = event.target.closest('button')?.dataset.upgrade;
+    if (!key || !Breakline.buy(save, key)) return;
+    persist();
+    if (mode === 'ready') resetRun();
+    renderMenu();
+  });
+  arena.addEventListener('pointerdown', event => {
+    if (mode !== 'play' || pointer !== null || event.button !== 0 || event.target.closest('button')) return;
+    pointer = event.pointerId; pointerX = event.clientX;
+    arena.setPointerCapture(pointer);
+    event.preventDefault();
+  });
+  arena.addEventListener('pointermove', event => {
+    if (event.pointerId !== pointer || mode !== 'play') return;
+    active.move(active.state.target + (event.clientX - pointerX) * 11.8 / arena.clientWidth);
+    pointerX = event.clientX;
+  });
+  for (const event of ['pointerup','pointercancel','lostpointercapture']) {
+    arena.addEventListener(event, e => { if (e.pointerId === pointer) pointer = null; });
+  }
+  function direction(key) {
+    if (key === 'ArrowLeft' || key.toLowerCase() === 'a') return -1;
+    if (key === 'ArrowRight' || key.toLowerCase() === 'd') return 1;
+    return 0;
+  }
+  window.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      if (mode === 'play') stop();
+      else if (mode === 'pause') resume();
+    } else if (mode === 'play' && direction(event.key)) {
+      keys.add(event.key); event.preventDefault();
+    }
+  });
+  window.addEventListener('keyup', event => keys.delete(event.key));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { stop(); previous = 0; }
+  });
+  window.addEventListener('blur', clearInput);
+  window.addEventListener('resize', () => { sceneDirty = true; });
+
+  function renderHUD(state) {
+    if (troops.textContent !== String(state.count)) troops.textContent = state.count;
+    const amount = Math.min(1, state.time / state.stage.duration);
+    progress.firstElementChild.style.transform = 'scaleX(' + (state.status === 'win' ? 1 : amount) + ')';
+    const percent = String(Math.round((state.status === 'win' ? 1 : amount) * 100));
+    if (progress.getAttribute('aria-valuenow') !== percent) progress.setAttribute('aria-valuenow', percent);
+    bossHud.hidden = !state.boss?.active;
+    if (state.boss?.active) bossHud.querySelector('i').style.transform = 'scaleX(' + (state.boss.hp / state.boss.maxHp) + ')';
+    wave.hidden = mode !== 'play' || state.time >= waveUntil;
+    if (!wave.hidden && wave.firstElementChild.textContent !== waveText) wave.firstElementChild.textContent = waveText;
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const elapsed = previous ? now - previous : 0;
+    previous = now;
+    if (mode === 'error' || document.hidden || (mode !== 'play' && ending <= 0 && !sceneDirty)) return;
+    if (mode === 'play') {
+      if (elapsed > 26) { slow++; fast = 0; }
+      else { slow = Math.max(0, slow - 1); fast++; }
+      if (slow > 22) { currentQuality = Math.max(.52, currentQuality - .14); slow = 0; }
+      else if (fast > 235) { currentQuality = Math.min(1, currentQuality + .09); fast = 0; }
+      active.state.quality = currentQuality < .8 ? .61 : 1;
+      accumulator += Math.min(.08, elapsed / 1000);
+      while (accumulator >= 1/60 && mode === 'play') {
+        let move = 0;
+        for (const key of keys) move += direction(key);
+        if (move) active.move(active.state.target + move * .145);
+        active.step(1/60);
+        accumulator -= 1/60;
+      }
+    } else if (mode === 'win' || mode === 'loss') {
+      const dt = Math.min(.04, elapsed / 1000);
+      active.step(dt);
+      ending -= dt;
+    }
+    sceneDirty = false;
+    renderer.draw(active.state, currentQuality);
+    renderHUD(active.state);
+  }
+  function showError(message) {
+    mode = 'error'; clearInput(); renderMenu(); el('copy').textContent = message;
+  }
+  canvas.addEventListener('webglcontextlost', event => {
+    event.preventDefault();
+    if (mode === 'play') stop();
+    el('copy').textContent = '그래픽 연결을 복구하는 중이에요. 오래 걸리면 이 페이지를 새로고침하세요.';
+  });
+  canvas.addEventListener('webglcontextrestored', () => {
+    try { renderer = createRenderer(canvas,el('labels')); sceneDirty = true; renderMenu(); }
+    catch { showError('WebGL 연결을 복구하지 못했어요. Chrome에서 새로 열어 주세요.'); }
+  });
+  resetRun(); soundLabel(); renderMenu();
+  try {
+    renderer = createRenderer(canvas,el('labels'));
+    requestAnimationFrame(frame);
+  } catch (error) {
+    console.error(error);
+    showError('WebGL을 시작할 수 없어요. WebGL을 지원하는 Chrome에서 열어 주세요.');
+  }
+})();
+
+</script>
+</body>
+</html>
